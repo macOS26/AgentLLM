@@ -2,24 +2,30 @@ import Foundation
 
 /// Connection details for an LLM service. Fully configurable — no hardcoded URLs.
 public struct LLMEndpoint: Codable, Sendable, Hashable {
-    /// Full chat API URL
+    /// Chat API URL (code/text models)
     public var chatURL: String
-    /// Full models list URL (empty if not supported)
+    /// Models list URL (code/text models)
     public var modelsURL: String
-    /// Auth header name ("x-api-key", "Authorization", "" for none)
+    /// Vision chat API URL (empty = same as chatURL)
+    public var visionChatURL: String
+    /// Vision models list URL (empty = same as modelsURL)
+    public var visionModelsURL: String
+    /// Auth header name
     public var authHeader: String
-    /// Auth value prefix ("Bearer ", "" for raw key)
+    /// Auth value prefix
     public var authPrefix: String
-    /// Extra headers sent with every request
+    /// Extra headers
     public var extraHeaders: [String: String]
     /// Request timeout in seconds
     public var timeout: TimeInterval
-    /// Default port for this service (0 = use URL as-is)
+    /// Default port (0 = use URL as-is)
     public var defaultPort: Int
 
     public init(
         chatURL: String,
         modelsURL: String = "",
+        visionChatURL: String = "",
+        visionModelsURL: String = "",
         authHeader: String = "Authorization",
         authPrefix: String = "Bearer ",
         extraHeaders: [String: String] = [:],
@@ -28,11 +34,25 @@ public struct LLMEndpoint: Codable, Sendable, Hashable {
     ) {
         self.chatURL = chatURL
         self.modelsURL = modelsURL
+        self.visionChatURL = visionChatURL
+        self.visionModelsURL = visionModelsURL
         self.authHeader = authHeader
         self.authPrefix = authPrefix
         self.extraHeaders = extraHeaders
         self.timeout = timeout
         self.defaultPort = defaultPort
+    }
+
+    /// Resolved chat URL — returns visionChatURL for vision, chatURL otherwise
+    public func resolvedChatURL(isVision: Bool) -> String {
+        if isVision && !visionChatURL.isEmpty { return visionChatURL }
+        return chatURL
+    }
+
+    /// Resolved models URL — returns visionModelsURL for vision, modelsURL otherwise
+    public func resolvedModelsURL(isVision: Bool) -> String {
+        if isVision && !visionModelsURL.isEmpty { return visionModelsURL }
+        return modelsURL
     }
 
     // MARK: - Well-Known Default Ports
